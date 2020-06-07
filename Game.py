@@ -8,8 +8,8 @@ def print_game_location(location):
     print("\n")
 
 
-def check_move(pos, direction):
-    if direction > 0 and pos == 9:
+def check_move(location, pos, direction):
+    if direction > 0 and pos == len(location) - 1:
         print("Error! Out of location.")
         return False;
     if direction < 0 and pos == 0:
@@ -27,19 +27,19 @@ def move(location, pos, direction):
 
 
 if __name__ == '__main__':
-    game_location = list('X_________')
-    position = 0
+    game_location = list('__________________X')
+    position = game_location.index('X')
 
     command = None;
     while command != "done":
         command = input("Enter command:\n")
         if command == "left":
-            if check_move(position, -1):
+            if check_move(game_location, position, -1):
                 game_location, position = move(game_location, position, -1)
                 print_game_location(game_location)
             pass
         if command == "right":
-            if check_move(position, 1):
+            if check_move(game_location, position, 1):
                 game_location, position = move(game_location, position, 1)
                 print_game_location(game_location)
             pass
