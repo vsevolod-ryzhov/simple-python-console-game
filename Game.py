@@ -8,7 +8,7 @@ def clear():
 
 def print_game_location(location):
     for item in location:
-        print(item, end=" ")
+        print(item, end="")
 
     print("\n")
 
@@ -23,6 +23,17 @@ def check_move(location, pos, direction):
     return True
 
 
+def check_exit(pos_user, pos_exit):
+    return pos_user == pos_exit
+
+
+def game_over():
+    clear()
+    print("###############################")
+    print("##### GAME OVER! YOU WIN! #####")
+    print("###############################")
+
+
 def move(location, pos, direction):
     location = copy.deepcopy(location)
     location[pos] = "_"
@@ -31,10 +42,23 @@ def move(location, pos, direction):
     return location, pos
 
 
+def after_move(location, pos_user, pos_exit):
+    if check_exit(pos_user, pos_exit):
+        game_over()
+        return True
+    else:
+        print_game_location(location)
+    return False
+
+
 if __name__ == '__main__':
     commands = ['left', 'l', 'right', 'r', 'help', 'h', 'quit', 'q']
-    game_location = list('__________________X')
-    position = game_location.index('X')
+    game_location = list('____@_____________X')
+    position_user = game_location.index('X')
+    position_exit = game_location.index('@')
+
+    clear()
+    print_game_location(game_location)
 
     command = None;
     is_quit = False
@@ -44,15 +68,16 @@ if __name__ == '__main__':
         try:
             commands.index(command)
         except ValueError:
-            print("Commands list: (h)elp, (l)eft, (r)ight, (q)uit")
+            print("Incorrect command. Commands list: (h)elp, (l)eft, (r)ight, (q)uit")
+            print_game_location(game_location)
 
         if command == "left" or command == "l":
-            if check_move(game_location, position, -1):
-                game_location, position = move(game_location, position, -1)
-                print_game_location(game_location)
+            if check_move(game_location, position_user, -1):
+                game_location, position_user = move(game_location, position_user, -1)
+                is_quit = after_move(game_location, position_user, position_exit)
         if command == "right" or command == "r":
-            if check_move(game_location, position, 1):
-                game_location, position = move(game_location, position, 1)
-                print_game_location(game_location)
+            if check_move(game_location, position_user, 1):
+                game_location, position_user = move(game_location, position_user, 1)
+                is_quit = after_move(game_location, position_user, position_exit)
         if command == "quit" or command == "q":
             is_quit = True
