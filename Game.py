@@ -1,5 +1,6 @@
 import os
 import copy
+import random
 
 
 def clear():
@@ -51,11 +52,20 @@ def after_move(location, pos_user, pos_exit):
     return False
 
 
+def init():
+    command = input("Enter location size: ")
+    command = int(command)
+
+    position_user, position_exit = random.sample(range(0, command), 2)
+    game_location = list('_' * command)
+    game_location[position_user] = 'X'
+    game_location[position_exit] = '@'
+    return game_location, position_user, position_exit
+
+
 if __name__ == '__main__':
     commands = ['left', 'l', 'right', 'r', 'help', 'h', 'quit', 'q']
-    game_location = list('____@_____________X')
-    position_user = game_location.index('X')
-    position_exit = game_location.index('@')
+    game_location, position_user, position_exit = init()
 
     clear()
     print_game_location(game_location)
