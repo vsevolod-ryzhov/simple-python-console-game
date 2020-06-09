@@ -27,21 +27,26 @@ def move(location, pos, direction):
 
 
 if __name__ == '__main__':
+    commands = ['left', 'l', 'right', 'r', 'help', 'h', 'quit', 'q']
     game_location = list('__________________X')
     position = game_location.index('X')
 
     command = None;
-    while command != "done":
+    is_quit = False
+    while not is_quit:
         command = input("Enter command:\n")
-        if command == "left":
+        try:
+            commands.index(command)
+        except ValueError:
+            print("Commands list: (h)elp, (l)eft, (r)ight, (q)uit")
+
+        if command == "left" or command == "l":
             if check_move(game_location, position, -1):
                 game_location, position = move(game_location, position, -1)
                 print_game_location(game_location)
-            pass
-        if command == "right":
+        if command == "right" or command == "r":
             if check_move(game_location, position, 1):
                 game_location, position = move(game_location, position, 1)
                 print_game_location(game_location)
-            pass
-        if command == "help" or (command != "left" and command != "right" and command != "help" and command != "done"):
-            print("Commands list: help, left, right, done")
+        if command == "quit" or command == "q":
+            is_quit = True
