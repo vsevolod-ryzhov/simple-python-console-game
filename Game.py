@@ -1,4 +1,9 @@
+import os
 import copy
+
+
+def clear():
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 
 def print_game_location(location):
@@ -34,7 +39,8 @@ if __name__ == '__main__':
     command = None;
     is_quit = False
     while not is_quit:
-        command = input("Enter command:\n")
+        command = input("Enter command: ")
+        clear()
         try:
             commands.index(command)
         except ValueError:
