@@ -53,8 +53,15 @@ def after_move(location, pos_user, pos_exit):
 
 
 def init():
-    command = input("Enter location size: ")
-    command = int(command)
+    command = 0
+    while command < 3:
+        clear()
+        command = input("Enter location size (size must be an integer > 2): ")
+        try:
+            command = int(command)
+        except ValueError:
+            print("Location size must be an integer")
+            command = 0
 
     position_user, position_exit = random.sample(range(0, command), 2)
     game_location = list('_' * command)
