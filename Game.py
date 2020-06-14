@@ -21,6 +21,8 @@ def check_move(location, pos, direction):
     if direction < 0 and pos == 0:
         print("Error! Out of location.")
         return False
+    if location[pos + direction] == '|':
+        return False
     return True
 
 
@@ -70,9 +72,38 @@ def init():
     return game_location, position_user, position_exit
 
 
+def make_barrier(game_location, pos_user, pos_exit):
+    command = -1
+    while command < 0 or command > count_free_fields(game_location):
+        clear()
+        command = input("Enter barrier count: ")
+        try:
+            command = int(command)
+        except ValueError:
+            print("Count must be an integer")
+            command = -1
+
+    if command == 0:
+        return game_location
+
+    generated_barrier = 0
+    while command > generated_barrier:
+        pos = random.randint(0, len(game_location) - 1)
+        if game_location[pos] == '_':
+            game_location[pos] = '|'
+            generated_barrier += 1
+
+    return game_location
+
+
+def count_free_fields(game_location):
+    return sum(1 for i in game_location if i == '_')
+
+
 if __name__ == '__main__':
-    commands = ['left', 'l', 'right', 'r', 'help', 'h', 'quit', 'q']
+    commands = ['left', 'l', 'right', 'r', 'help', 'h', 'quit', 'q', 'attack left', 'al', 'attack right', 'ar']
     game_location, position_user, position_exit = init()
+    game_location = make_barrier(game_location, position_user, position_exit)
 
     clear()
     print_game_location(game_location)
@@ -85,7 +116,7 @@ if __name__ == '__main__':
         try:
             commands.index(command)
         except ValueError:
-            print("Incorrect command. Commands list: (h)elp, (l)eft, (r)ight, (q)uit")
+            print("Incorrect command. Commands list: (h)elp, (l)eft, (r)ight, (al) attack left, (ar) attack right, (q)uit")
             print_game_location(game_location)
 
         if command == "left" or command == "l":
@@ -96,5 +127,13 @@ if __name__ == '__main__':
             if check_move(game_location, position_user, 1):
                 game_location, position_user = move(game_location, position_user, 1)
                 is_quit = after_move(game_location, position_user, position_exit)
+        if command == "attack left" or command == "al":
+            if game_location[position_user - 1] == '|':
+                game_location[position_user - 1] = '_';
+                print_game_location(game_location)
+        if command == "attack right" or command == "ar":
+            if game_location[position_user + 1] == '|':
+                game_location[position_user + 1] = '_';
+                print_game_location(game_location)
         if command == "quit" or command == "q":
             is_quit = True
