@@ -2,32 +2,36 @@ import os
 import copy
 import random
 
+CONST_EMPTY_FIELD = '_';
+CONST_BARRIER_FIELD = '|';
+CONST_HERO_FIELD = 'X';
+CONST_EXIT_FIELD = '@';
 
 def clear():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 
-def print_game_location(location):
-    for item in location:
+def print_game_location(game_dictionary):
+    for item in game_dictionary['game_location']:
         print(item, end="")
 
     print("\n")
 
 
-def check_move(location, pos, direction):
-    if direction > 0 and pos == len(location) - 1:
+def check_move(game_dictionary, direction):
+    if direction > 0 and game_dictionary['position_user'] == len(game_dictionary['game_location']) - 1:
         print("Error! Out of location.")
         return False;
-    if direction < 0 and pos == 0:
+    if direction < 0 and game_dictionary['position_user'] == 0:
         print("Error! Out of location.")
         return False
-    if location[pos + direction] == '|':
+    if game_dictionary['game_location'][game_dictionary['position_user'] + direction] == CONST_BARRIER_FIELD:
         return False
     return True
 
 
-def check_exit(pos_user, pos_exit):
-    return pos_user == pos_exit
+def check_exit(game_dictionary):
+    return game_dictionary['position_user'] == game_dictionary['position_exit']
 
 
 def game_over():
@@ -37,20 +41,21 @@ def game_over():
     print("###############################")
 
 
-def move(location, pos, direction):
-    location = copy.deepcopy(location)
-    location[pos] = "_"
-    pos += direction
-    location[pos] = "X"
-    return location, pos
+def move(game_dictionary, direction):
+    location = copy.deepcopy(game_dictionary['game_location'])
+    location[game_dictionary['position_user']] = CONST_EMPTY_FIELD
+    game_dictionary['position_user'] += direction
+    location[game_dictionary['position_user']] = CONST_HERO_FIELD
+    game_dictionary['game_location'] = location
+    return game_dictionary
 
 
-def after_move(location, pos_user, pos_exit):
-    if check_exit(pos_user, pos_exit):
+def after_move(game_dictionary):
+    if check_exit(game_dictionary):
         game_over()
         return True
     else:
-        print_game_location(location)
+        print_game_location(game_dictionary)
     return False
 
 
@@ -66,15 +71,19 @@ def init():
             command = 0
 
     position_user, position_exit = random.sample(range(0, command), 2)
-    game_location = list('_' * command)
-    game_location[position_user] = 'X'
-    game_location[position_exit] = '@'
-    return game_location, position_user, position_exit
+    dict = {
+        'game_location': list(CONST_EMPTY_FIELD * command),
+        'position_user': position_user,
+        'position_exit': position_exit
+    }
+    dict['game_location'][position_user] = CONST_HERO_FIELD
+    dict['game_location'][position_exit] = CONST_EXIT_FIELD
+    return dict
 
 
-def make_barrier(game_location, pos_user, pos_exit):
+def make_barrier(game_dictionary):
     command = -1
-    while command < 0 or command > count_free_fields(game_location):
+    while command < 0 or command > count_free_fields(game_dictionary):
         clear()
         command = input("Enter barrier count: ")
         try:
@@ -84,29 +93,29 @@ def make_barrier(game_location, pos_user, pos_exit):
             command = -1
 
     if command == 0:
-        return game_location
+        return game_dictionary
 
     generated_barrier = 0
     while command > generated_barrier:
-        pos = random.randint(0, len(game_location) - 1)
-        if game_location[pos] == '_':
-            game_location[pos] = '|'
+        pos = random.randint(0, len(game_dictionary['game_location']) - 1)
+        if game_dictionary['game_location'][pos] == CONST_EMPTY_FIELD:
+            game_dictionary['game_location'][pos] = CONST_BARRIER_FIELD
             generated_barrier += 1
 
-    return game_location
+    return game_dictionary
 
 
-def count_free_fields(game_location):
-    return sum(1 for i in game_location if i == '_')
+def count_free_fields(game_dictionary):
+    return sum(1 for i in game_dictionary['game_location'] if i == CONST_EMPTY_FIELD)
 
 
 if __name__ == '__main__':
     commands = ['left', 'l', 'right', 'r', 'help', 'h', 'quit', 'q', 'attack left', 'al', 'attack right', 'ar']
-    game_location, position_user, position_exit = init()
-    game_location = make_barrier(game_location, position_user, position_exit)
+    game_dictionary = init()
+    game_dictionary = make_barrier(game_dictionary)
 
     clear()
-    print_game_location(game_location)
+    print_game_location(game_dictionary)
 
     command = None;
     is_quit = False
@@ -117,23 +126,23 @@ if __name__ == '__main__':
             commands.index(command)
         except ValueError:
             print("Incorrect command. Commands list: (h)elp, (l)eft, (r)ight, (al) attack left, (ar) attack right, (q)uit")
-            print_game_location(game_location)
+            print_game_location(game_dictionary)
 
         if command == "left" or command == "l":
-            if check_move(game_location, position_user, -1):
-                game_location, position_user = move(game_location, position_user, -1)
-                is_quit = after_move(game_location, position_user, position_exit)
+            if check_move(game_dictionary, -1):
+                game_dictionary = move(game_dictionary, -1)
+                is_quit = after_move(game_dictionary)
         if command == "right" or command == "r":
-            if check_move(game_location, position_user, 1):
-                game_location, position_user = move(game_location, position_user, 1)
-                is_quit = after_move(game_location, position_user, position_exit)
+            if check_move(game_dictionary, 1):
+                game_dictionary = move(game_dictionary, 1)
+                is_quit = after_move(game_dictionary)
         if command == "attack left" or command == "al":
-            if game_location[position_user - 1] == '|':
-                game_location[position_user - 1] = '_';
-                print_game_location(game_location)
+            if game_dictionary['game_location'][game_dictionary['position_user'] - 1] == CONST_BARRIER_FIELD:
+                game_dictionary['game_location'][game_dictionary['position_user'] - 1] = CONST_EMPTY_FIELD;
+                print_game_location(game_dictionary)
         if command == "attack right" or command == "ar":
-            if game_location[position_user + 1] == '|':
-                game_location[position_user + 1] = '_';
-                print_game_location(game_location)
+            if game_dictionary['game_location'][game_dictionary['position_user'] + 1] == CONST_BARRIER_FIELD:
+                game_dictionary['game_location'][game_dictionary['position_user'] + 1] = CONST_EMPTY_FIELD;
+                print_game_location(game_dictionary)
         if command == "quit" or command == "q":
             is_quit = True
