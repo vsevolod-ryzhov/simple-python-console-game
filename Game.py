@@ -21,13 +21,11 @@ if __name__ == '__main__':
             print_game_location(game_dictionary)
 
         if command == "left" or command == "l":
-            if check_move(game_dictionary, -1):
-                game_dictionary = move(game_dictionary, -1)
-                is_quit = after_move(game_dictionary)
+            game_dictionary = move(game_dictionary, -1)
+            is_quit = after_move(game_dictionary)
         if command == "right" or command == "r":
-            if check_move(game_dictionary, 1):
-                game_dictionary = move(game_dictionary, 1)
-                is_quit = after_move(game_dictionary)
+            game_dictionary = move(game_dictionary, 1)
+            is_quit = after_move(game_dictionary)
         if command == "attack left" or command == "al":
             game_dictionary = attack(game_dictionary, -1)
             print_game_location(game_dictionary)

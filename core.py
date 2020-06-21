@@ -42,7 +42,9 @@ def game_over():
 
 
 def move(game_dictionary, direction):
-    # TODO: check that hero can do move in direction
+    if not check_move(game_dictionary, direction):
+        return game_dictionary
+
     location = copy.deepcopy(game_dictionary['game_location'])
     location[game_dictionary['position_user']] = CONST_EMPTY_FIELD
     game_dictionary['position_user'] += direction
