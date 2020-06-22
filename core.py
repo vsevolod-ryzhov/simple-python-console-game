@@ -1,118 +1,149 @@
 import os
+import sys
 import copy
 import random
-
-CONST_EMPTY_FIELD = '_';
-CONST_BARRIER_FIELD = '|';
-CONST_HERO_FIELD = 'X';
-CONST_EXIT_FIELD = '@';
-
-def clear():
-    os.system('cls' if os.name == 'nt' else 'clear')
+from abc import ABC, abstractmethod
 
 
-def print_game_location(game_dictionary):
-    for item in game_dictionary['game_location']:
-        print(item, end="")
-
-    print("\n")
-
-
-def check_move(game_dictionary, direction):
-    if direction > 0 and game_dictionary['position_user'] == len(game_dictionary['game_location']) - 1:
-        print("Error! Out of location.")
-        return False;
-    if direction < 0 and game_dictionary['position_user'] == 0:
-        print("Error! Out of location.")
-        return False
-    if game_dictionary['game_location'][game_dictionary['position_user'] + direction] == CONST_BARRIER_FIELD:
-        return False
-    return True
+class Position(ABC):
+    @abstractmethod
+    def __init__(self, position):
+        self.position = position
 
 
-def check_exit(game_dictionary):
-    return game_dictionary['position_user'] == game_dictionary['position_exit']
+class Initializer:
+    @staticmethod
+    def make_game():
+        command = 0
+        while command < 3:
+            Game.clear()
+            command = input("Enter location size (size must be an integer > 2): ")
+            try:
+                command = int(command)
+            except ValueError:
+                print("Location size must be an integer")
+                command = 0
+
+        position_user, position_exit = random.sample(range(0, command), 2)
+        location = list(Game.empty_field() * command)
+        location[position_user] = Game.hero_field()
+        location[position_exit] = Game.exit_field()
+
+        game = Game(location, Hero(position_user), Exit(position_exit))
+        return Initializer.make_barrier(game)
+
+    @staticmethod
+    def make_barrier(game):
+        command = -1
+        while command < 0 or command > game.count_free_fields():
+            Game.clear()
+            command = input("Enter barrier count: ")
+            try:
+                command = int(command)
+            except ValueError:
+                print("Count must be an integer")
+                command = -1
+
+        if command == 0:
+            return game
+
+        generated_barrier = 0
+        while command > generated_barrier:
+            pos = random.randint(0, len(game.location) - 1)
+            if game.location[pos] == Game.empty_field():
+                game.location[pos] = Game.barrier_field()
+                generated_barrier += 1
+
+        return game
 
 
-def game_over():
-    clear()
-    print("###############################")
-    print("##### GAME OVER! YOU WIN! #####")
-    print("###############################")
+class Game:
+    @staticmethod
+    def empty_field():
+        return '_'
 
+    @staticmethod
+    def barrier_field():
+        return '|'
 
-def move(game_dictionary, direction):
-    if not check_move(game_dictionary, direction):
-        return game_dictionary
+    @staticmethod
+    def hero_field():
+        return 'X'
 
-    location = copy.deepcopy(game_dictionary['game_location'])
-    location[game_dictionary['position_user']] = CONST_EMPTY_FIELD
-    game_dictionary['position_user'] += direction
-    location[game_dictionary['position_user']] = CONST_HERO_FIELD
-    game_dictionary['game_location'] = location
-    return game_dictionary
+    @staticmethod
+    def exit_field():
+        return '@'
 
+    @staticmethod
+    def clear():
+        os.system('cls' if os.name == 'nt' else 'clear')
 
-def attack(game_dictionary, direction):
-    if game_dictionary['game_location'][game_dictionary['position_user'] + direction] == CONST_BARRIER_FIELD:
-        game_dictionary['game_location'][game_dictionary['position_user'] + direction] = CONST_EMPTY_FIELD;
-    return game_dictionary
+    @staticmethod
+    def game_over():
+        Game.clear()
+        print("###############################")
+        print("##### GAME OVER! YOU WIN! #####")
+        print("###############################")
+        Game.quit()
 
+    @staticmethod
+    def quit():
+        Game.clear()
+        sys.exit()
 
-def after_move(game_dictionary):
-    if check_exit(game_dictionary):
-        game_over()
+    def __init__(self, location, hero, exit):
+        self.location = location
+        self.hero = hero
+        self.exit = exit
+
+    def print_game_location(self):
+        for item in self.location:
+            print(item, end="")
+        print("\n")
+
+    def check_move(self, direction):
+        if direction > 0 and self.hero.position == len(self.location) - 1:
+            print("Error! Out of location.")
+            return False;
+        if direction < 0 and self.hero.position == 0:
+            print("Error! Out of location.")
+            return False
+        if self.location[self.hero.position + direction] == self.barrier_field():
+            return False
         return True
-    else:
-        print_game_location(game_dictionary)
-    return False
+
+    def check_exit(self):
+        return self.hero.position == self.exit.position
+
+    def count_free_fields(self):
+        return sum(1 for i in self.location if i == self.empty_field())
+
+    def move(self, direction):
+        if not self.check_move(direction):
+            return False
+        location = copy.deepcopy(self.location)
+        location[self.hero.position] = self.empty_field()
+        self.hero.position += direction
+        location[self.hero.position] = self.hero_field()
+        self.location = location
+
+        self.after_move()
+        return True
+
+    def after_move(self):
+        if self.check_exit():
+            self.game_over()
+
+    def attack(self, direction):
+        if self.location[self.hero.position + direction] == self.barrier_field():
+            self.location[self.hero.position + direction] = self.empty_field();
 
 
-def init():
-    command = 0
-    while command < 3:
-        clear()
-        command = input("Enter location size (size must be an integer > 2): ")
-        try:
-            command = int(command)
-        except ValueError:
-            print("Location size must be an integer")
-            command = 0
-
-    position_user, position_exit = random.sample(range(0, command), 2)
-    dict = {
-        'game_location': list(CONST_EMPTY_FIELD * command),
-        'position_user': position_user,
-        'position_exit': position_exit
-    }
-    dict['game_location'][position_user] = CONST_HERO_FIELD
-    dict['game_location'][position_exit] = CONST_EXIT_FIELD
-    return dict
+class Hero(Position):
+    def __init__(self, position):
+        super().__init__(position)
 
 
-def make_barrier(game_dictionary):
-    command = -1
-    while command < 0 or command > count_free_fields(game_dictionary):
-        clear()
-        command = input("Enter barrier count: ")
-        try:
-            command = int(command)
-        except ValueError:
-            print("Count must be an integer")
-            command = -1
-
-    if command == 0:
-        return game_dictionary
-
-    generated_barrier = 0
-    while command > generated_barrier:
-        pos = random.randint(0, len(game_dictionary['game_location']) - 1)
-        if game_dictionary['game_location'][pos] == CONST_EMPTY_FIELD:
-            game_dictionary['game_location'][pos] = CONST_BARRIER_FIELD
-            generated_barrier += 1
-
-    return game_dictionary
-
-
-def count_free_fields(game_dictionary):
-    return sum(1 for i in game_dictionary['game_location'] if i == CONST_EMPTY_FIELD)
+class Exit(Position):
+    def __init__(self, position):
+        super().__init__(position)
